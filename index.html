@@ -15,11 +15,40 @@
         }
         pre {
             font-family: "Courier New", Courier, "Lucida Console", Monaco, monospace;
-            font-size: 14px;
-            line-height: 1.4;
-            white-space: pre;
-            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            word-break: break-word;
             max-width: 80ch;
+        }
+        .qr-footer {
+            display: none;
+        }
+
+        /* Print-specifieke regels voor Amerikaanse copyshops (US Letter) */
+        @media print {
+            @page {
+                size: letter portrait;
+                margin: 0.75in;
+            }
+            body {
+                padding: 0;
+                display: block;
+            }
+            pre {
+                font-size: 11pt;
+                line-height: 1.4;
+                white-space: pre-wrap;
+            }
+            .qr-footer {
+                display: block;
+                margin-top: 2rem;
+                padding-top: 1rem;
+                border-top: 1px dashed #000;
+                text-align: center;
+                font-family: monospace;
+                font-size: 10pt;
+            }
         }
     </style>
 </head>
@@ -252,5 +281,8 @@ Authors' Addresses
    Belgium
    Email: matthias@rfc4301.dev
 </pre>
+<div class="qr-footer">
+    [ RFC-4301 OFFICIAL SPECIFICATION ARTIFACT -- VERIFY AT HTTPS://RFC4301.DEV ]
+</div>
 </body>
 </html>
