@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFC 4301 - Paxos-Based Hydration Protocol (DMK-P)</title>
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+        pre {
+            font-family: "Courier New", Courier, "Lucida Console", Monaco, monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre;
+            overflow-x: auto;
+            max-width: 80ch;
+        }
+    </style>
+</head>
+<body>
+<pre>
+Network Working Group                                          M. Vance
+Request for Comments: 4301                                   M. Struyf
+Category: Informational Standards Track                Autonomous Nodes
+ISSN: 0000-4301                                             October 2026
+
+
+ Paxos-Based Hydration Protocol for Distributed Micro-Kitchens (DMK-P)
+
+Abstract
+
+   This document specifies the Distributed Micro-Kitchen Protocol (DMK-P),
+   an application-layer consensus framework designed to eliminate 
+   unbounded human latency and cache invalidation failures across corporate 
+   hydration endpoints. Historically, distributed engineering nodes within 
+   high-density campus clusters (e.g., Building 43) traverse physical topology 
+   under optimistic assumptions, only to encounter depleted cold brew taps 
+   or partition events caused by malicious nodes returning empty oat milk 
+   cartons to refrigerated storage. DMK-P models micro-kitchen inventory 
+   under Byzantine Fault Tolerant (BFT) constraints, establishes formal 
+   bounds on the Price of Anarchy (PoA) in communal snack consumption, and 
+   proves that strong caffeine consistency is strictly required to sustain 
+   Site Reliability Engineering (SRE) Service Level Objectives (SLOs).
+
+Status of This Memo
+
+   This memo documents an informational standard for the Internet community.
+   Distribution of this memo is unlimited. Technical critique must be 
+   submitted alongside deterministic traces or mathematically verified proofs.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors. All rights reserved.
+
+Table of Contents
+
+   1. Introduction and Problem Statement
+   2. Terminology and Formal System Model
+   3. The Byzantine Barista Problem
+   4. Protocol Specification
+      4.1. The Three-Phase Pour (3PP)
+      4.2. Quorum Leases and Flow Rate Gossip
+   5. Proof of Strong Caffeine Consistency
+   6. Security and Anti-Freeriding Considerations
+   7. IANA and Physical Infrastructure Considerations
+   8. References
+   Authors' Addresses
+
+
+1. Introduction and Problem Statement
+
+   In modern hyper-scale engineering clusters, developer throughput Theta
+   is functionally bounded by circulating adenosine receptor antagonist 
+   concentrations. Empirically, Theta satisfies:
+
+                     Theta = lim_{tau -> 0} (dC / dtau) * eta_code
+
+   where C denotes systemic caffeine density and eta_code is cognitive 
+   efficiency. 
+
+   Prior art relies on naive, uncoordinated polling: an engineering node 
+   dispatches an asynchronous physical query to a local Micro-Kitchen (MK). 
+   Under peak load (09:45 - 11:15 PST), this naive heuristic produces 
+   catastrophic tail latencies:
+   
+   a) Phantom Availability: A local cache indicates cold brew tap viability, 
+      yielding an unrecoverable HTTP 404 (Keg Dry) upon physical arrival.
+   b) Contention Cascades: Redirection to adjacent subnets (Building 42 / 44) 
+      induces physical congestion on inter-building pedestrian backbones.
+   c) Degenerate State Persistence: The "Empty Carton" anomaly, wherein 
+      a consumer node exhausts refrigerated assets but refuses to execute 
+      garbage collection (GC), returning a null container to cold storage.
+
+   DMK-P resolves these anomalies by treating every beverage valve and 
+   chilled shelf as an immutable state machine replicated across a 
+   Raft/Paxos consensus cluster.
+
+
+2. Terminology and Formal System Model
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in RFC 2119.
+
+   Node (N_i): A human engineer or robotic agent operating on campus.
+   Vessel (V): A container (cup, tumbler, beaker) possessing finite 
+               fluid capacity C_V.
+   Dispenser (D_k): A stateful physical tap publishing metric streams:
+                    mu(t) = <Volume, FlowRate, Temp>.
+   Ghost Container (epsilon): A container satisfying mass(epsilon) ~ 0
+                              occupying refrigerated slot space.
+
+
+3. The Byzantine Barista Problem
+
+   Consider a cluster of n engineering nodes consuming from m identical 
+   cold brew reservoirs. A subset f of nodes exhibit Byzantine behavior:
+   
+   1. Returning empty oat milk cartons to shelf slots (Ostrich Algorithm).
+   2. Leaving 1.5 ml of liquid in a reservoir to bypass the threshold delta 
+      governing the obligation to replace the keg.
+   3. Hoarding cold brew concentrate during network degradation events.
+
+   Theorem 1 (Byzantine Thirst Bound):
+   In an uncoordinated micro-kitchen cluster with n nodes, if f >= n / 3
+   nodes are non-compliant, reliable caffeine availability cannot be 
+   guaranteed under asynchronous message passing.
+
+   Proof:
+   Trivial reduction to distributed Byzantine Generals with fractional fluid 
+   dynamics. Left as an exercise to the reader.
+
+
+4. Protocol Specification
+
+   DMK-P introduces distributed sensory quorum leases using millimeter-wave 
+   radar and gravimetric load cells embedded beneath each tap drip tray.
+
+4.1. The Three-Phase Pour (3PP)
+
+   Prior to physical fluid extraction, any node N_i MUST execute the 
+   following cryptographic state exchange:
+
+   Node N_i                     Dispenser D_k             Raft Leader
+      |                               |                        |
+      |--- 1. PRE-POUR (Vol, Id) ---->|                        |
+      |                               |--- 2. PROPOSE-LOCK --->|
+      |                               |<-- 3. COMMIT-LEASE ----|
+      |                               |                        |
+      |<-- 4. VALVE_ACTUATE (OK) -----|                        |
+      |                               |                        |
+      |=== 5. Physical Fluid Flow ====|                        |
+      |                               |                        |
+      |--- 6. RELEASE-LOCK (V_disp) ->|                        |
+      |                               |--- 7. COMMIT-DELTA --->|
+      |                               |<-- 8. ACK ------------|
+      |<-- 9. POUR-RECEIPT (Signed) --|                        |
+
+   If a node attempts fluid extraction without an active lease, the drip tray 
+   SHALL trigger a local piezoelectric interlock, physically deflecting the 
+   stream toward a drain line.
+
+4.2. Quorum Leases and Flow Rate Gossip
+
+   Dispensers maintain an append-only transaction ledger (keg_log). 
+   Remaining fluid volume V_rem is gossiped across adjacent campus 
+   nodes using UDP multicast on port 4301.
+
+      struct DispenserState {
+          uint64_t tap_id;
+          uint32_t remaining_ml;
+          uint16_t temperature_centi_celsius;
+          uint8_t  head_pressure_psi;
+          bytes32  prev_pour_hash;
+      };
+
+   Any node experiencing V_rem < 500 ml MUST automatically trigger 
+   a high-priority ticket assigned to Facilities Engineering (Priority: P0, 
+   SLA: 180s).
+
+
+5. Proof of Strong Caffeine Consistency
+
+   We define the CAP theorem for Distributed Refreshments:
+   * Consistency: All nodes observe identical tap volume counters.
+   * Availability: Every visit to an MK yields >= 250 ml of beverage.
+   * Partition Tolerance: System survives complete physical fiber severance 
+     between Building 43 and the Central Campus Backbone.
+
+   Lemma 2:
+   Under physical network partition, an MK MUST sacrifice Availability 
+   in favor of Consistency. Dispensing un-metered cold brew under partitions 
+   inevitably causes silent cache depletion, inducing catastrophic physical 
+   outages during subsequent post-incident reviews.
+
+
+6. Security and Anti-Freeriding Considerations
+
+   To counteract the "Ghost Container" vulnerability, all refrigerated 
+   shelves MUST incorporate gravimetric arrays calibrated to 0.1g precision.
+   If a node places a container satisfying:
+
+                  mass(C) < tare(C) + epsilon
+
+   into an active refrigeration slot, the shelf unit MUST:
+   1. Emit a high-frequency acoustic warning (85 dB at 1 kHz).
+   2. Log the offending node's hardware address to the public commit stream.
+   3. Revoke remote code execution (RCE) privileges on all production 
+      staging clusters for a duration of 24 hours.
+
+
+7. IANA and Physical Infrastructure Considerations
+
+   This document requests IANA to assign UDP and TCP Port 4301 to the 
+   "DMK-P Communal Refreshment Mesh".
+
+   Building 43 Facilities Management SHOULD immediately retrofit all 
+   nitrogen taps with high-speed brushless solenoid valves capable of 
+   sub-millisecond shutoff to prevent meniscus overflow on standard vessels.
+
+
+8. References
+
+   [RFC2119] Bradner, S., "Key words for use in RFCs to Indicate 
+             Requirement Levels", BCP 14, RFC 2119, March 1997.
+   [LAMPORT78] Lamport, L., "Time, Clocks, and the Ordering of Events in a 
+               Distributed System", CACM, July 1978.
+   [SRE2016] Beyer, B., Jones, C., Petoff, J., Murphy, N., "Site 
+             Reliability Engineering: How Google Runs Production Systems", 
+             O'Reilly Media, 2016.
+
+
+Authors' Addresses
+
+   Mei-Lin Vance
+   Google DeepMind / Core Infrastructure
+   1600 Amphitheatre Pkwy
+   Mountain View, CA 94043
+   United States of America
+   Email: vance-dist-sys@google.internal (Fictional / Unroutable)
+
+   Matthias Struyf
+   Autonomous Systems & Empirical Economics
+   Aalst / Brussels Node
+   Belgium
+   Email: matthias@rfc4301.dev
+</pre>
+</body>
+</html>
